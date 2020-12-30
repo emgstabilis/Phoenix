@@ -8,6 +8,7 @@
 #-----------------------------------------------------------------------------
 
 import sys
+import sysconfig
 import os
 import setuptools
 
@@ -27,13 +28,20 @@ VERSION = cfg.VERSION
 
 isWindows = sys.platform.startswith('win')
 isDarwin = sys.platform == "darwin"
+# MSYS2: sys.platform is win32 but compiler is GCC instead of MSVC.
+# We identify use several ways in order to ensure that it is correctly
+# identified.  (Any of the 3 tests works on my system.)
+isMSYS2 = ((isWindows and "GCC" in sys.version)
+           or ("mingw" in sys.prefix)
+           or (sysconfig.get_platform() == "mingw"))
 
 top = '.'
 out = 'build/waf'
 
 
 def options(opt):
-    if isWindows:
+    global isWindows, isMSYS2, isDarwin
+    if isWindows and not isMSYS2:
         opt.load('msvc')
     else:
         opt.load('compiler_c compiler_cxx')
@@ -65,7 +73,8 @@ def options(opt):
 
 
 def configure(conf):
-    if isWindows:
+    global isWindows, isMSYS2, isDarwin
+    if isWindows and not isMSYS2:
         # For now simply choose the compiler version based on the Python
         # version. We have a chicken-egg problem here. The compiler needs to
         # be selected before the Python stuff can be configured, but we need
@@ -103,7 +112,7 @@ def configure(conf):
         conf.env.PYTHON = conf.options.python
     conf.load('python')
     conf.check_python_version(minver=(2,7,0))
-    if isWindows:
+    if isWindows and not isMSYS2:
         # Search for the Python headers without doing some stuff that could
         # incorrectly fail on Windows. See my_check_python_headers below.
         # TODO: Check if it can/should be used on other platforms too.
@@ -118,7 +127,7 @@ def configure(conf):
     # Ensure that the headers in siplib and Phoenix's src dir can be found
     conf.env.INCLUDES_WXPY = ['sip/siplib', 'wx/include', 'src']
 
-    if isWindows:
+    if isWindows and not isMSYS2:
         # Windows/MSVC specific stuff
 
         cfg.finishSetup(debug=conf.env.debug)
@@ -545,11 +554,11 @@ def build(bld):
 
     cfg.finishSetup(bld.env.wx_config)
 
-    if not isWindows:
+    if not isWindows or isMSYS2:
         cmd = ' '.join(bld.env.CC) + ' --version'
-        copmpiler = runcmd(cmd, getOutput=True, echoCmd=False)
-        copmpiler = indent(copmpiler, ' '*5)
-        msg("**** Compiler: {}\n{}".format(cmd, copmpiler))
+        compiler = runcmd(cmd, getOutput=True, echoCmd=False)
+        compiler = indent(compiler, ' '*5)
+        msg("**** Compiler: {}\n{}".format(cmd, compiler))
 
     # Copy the license files from wxWidgets
     updateLicenseFiles(cfg)
