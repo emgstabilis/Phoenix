@@ -108,6 +108,10 @@ def configure(conf):
     else:
         conf.load('compiler_c compiler_cxx')
 
+    if isMSYS2:
+        cfg.COMPILER = "mingw32"
+        conf.options.gtk3 = False
+
     if conf.options.python:
         conf.env.PYTHON = conf.options.python
     conf.load('python')
@@ -204,6 +208,13 @@ def configure(conf):
     else:
         # TODO: Double-check that this works when using an installed wxWidgets
         wxConfigDir = cfg.findWxConfigDir(conf.options.wx_config)
+        if isMSYS2:
+            # We have to translate the path because on MSYS2 python is
+            # a native program and can handle only native paths,
+            # whereas wx_config returns posix paths.
+            if wxConfigDir.startswith("/"):
+                wxConfigDir = wxConfigDir[1:]
+            wxConfigDir = os.path.join(os.path.dirname(sys.prefix), wxConfigDir)
 
         # Configuration stuff for non-Windows ports using wx-config
         conf.env.CFLAGS_WX   = list()
@@ -311,7 +322,7 @@ def configure(conf):
         # above) and not darwin then we must be using the GTK2 or GTK3 port of
         # wxWidgets.  If we ever support other ports then this code will need
         # to be adjusted.
-        if not isDarwin:
+        if not isDarwin and not isMSYS2:
             if conf.options.gtk2:
                 conf.options.gtk3 = False
             if conf.options.gtk2:
