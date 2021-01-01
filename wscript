@@ -45,6 +45,8 @@ def options(opt):
         opt.load('msvc')
     else:
         opt.load('compiler_c compiler_cxx')
+    if isMSYS2:
+        opt.load('winres')   # for .rc files produced by makeETGRule()
     opt.load('python')
 
     opt.add_option('--debug', dest='debug', action='store_true', default=False,
@@ -109,6 +111,7 @@ def configure(conf):
         conf.load('compiler_c compiler_cxx')
 
     if isMSYS2:
+        conf.load('winres')   # for .rc files produced by makeETGRule()
         cfg.COMPILER = "mingw32"
         conf.options.gtk3 = False
 
@@ -116,7 +119,7 @@ def configure(conf):
         conf.env.PYTHON = conf.options.python
     conf.load('python')
     conf.check_python_version(minver=(2,7,0))
-    if isWindows and not isMSYS2:
+    if isWindows:
         # Search for the Python headers without doing some stuff that could
         # incorrectly fail on Windows. See my_check_python_headers below.
         # TODO: Check if it can/should be used on other platforms too.
@@ -369,8 +372,12 @@ def configure(conf):
         # specific Python instance instead of the one that is loading the
         # wxPython extension modules. That's okay for PYEMBED but not for PYEXT
         # configs.
-        conf.env.LIBPATH_PYEXT = []
-        conf.env.LIB_PYEXT = []
+        # 
+        # MSYS2: Needed to disable the following or ld would complain
+        # of many missing python symbols.
+        if not isMSYS2:
+            conf.env.LIBPATH_PYEXT = []
+            conf.env.LIB_PYEXT = []
 
 
         # Use the same compilers that wxWidgets used
@@ -444,7 +451,7 @@ def my_check_python_headers(conf):
     all_flags = dct['LDFLAGS'] + ' ' + dct['LDSHARED'] + ' ' + dct['CFLAGS']
     conf.parse_flags(all_flags, 'PYEXT')
 
-    if isWindows:
+    if isWindows and not isMSYS2:
         libname = 'python' + conf.env['PYTHON_VERSION'].replace('.', '')
 
         if dct['LIBDIR'] and os.path.isdir(dct['LIBDIR']):
@@ -488,15 +495,17 @@ def my_check_python_headers(conf):
 
         if result:
             env['LIBPATH_PYEMBED'] = path
+            env['LIBPATH_PYEXT'] = path
             env.append_value('LIB_PYEMBED', [name])
+            env.append_value('LIB_PYEXT', [name])
         else:
             conf.to_log("\n\n### LIB NOT FOUND\n")
 
 
     conf.to_log("Include path for Python extensions "
                 "(found via distutils module): %r\n" % (dct['INCLUDEPY'],))
-    env['INCLUDES_PYEXT'] = [dct['INCLUDEPY']]
-    env['INCLUDES_PYEMBED'] = [dct['INCLUDEPY']]
+    env['INCLUDES_PYEXT'] += [dct['INCLUDEPY']]
+    env['INCLUDES_PYEMBED'] += [dct['INCLUDEPY']]
 
     # Code using the Python API needs to be compiled with -fno-strict-aliasing
     if env['CC_NAME'] == 'gcc':
