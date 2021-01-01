@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 
 import sys
+import sysconfig
 import glob
 import hashlib
 import optparse
@@ -77,6 +78,12 @@ unstable_series = (version.wxVER_MINOR % 2) == 1  # is the minor version odd or 
 isWindows = sys.platform.startswith('win')
 isDarwin = sys.platform == "darwin"
 devMode = False
+# MSYS2: sys.platform is win32 but compiler is GCC instead of MSVC.
+# We identify use several ways in order to ensure that it is correctly
+# identified.  (Any of the 3 tests works on my system.)
+isMSYS2 = ((isWindows and "GCC" in sys.version)
+           or ("mingw" in sys.prefix)
+           or (sysconfig.get_platform() == "mingw"))
 
 baseName = version.PROJECT_NAME
 eggInfoName = baseName + '.egg-info'
@@ -793,7 +800,7 @@ def uploadTree(srcPath, destPath, options, days=30):
 
 
 def checkCompiler(quiet=False):
-    if isWindows:
+    if isWindows and not isMSYS2:
         # Make sure that the compiler that Python wants to use can be found.
         # It will terminate if the compiler is not found or other exceptions
         # are raised.
@@ -1613,7 +1620,7 @@ def cmd_build_py(options, args):
     if options.release:
         os.environ['WXPYTHON_RELEASE'] = 'yes'
 
-    if not isWindows:
+    if not isWindows or isMSYS2:
         WX_CONFIG = os.environ.get('WX_CONFIG', None)
         if WX_CONFIG is None:
             WX_CONFIG = posixjoin(BUILD_DIR, 'wx-config')
@@ -1626,7 +1633,7 @@ def cmd_build_py(options, args):
 
 
     wafBuildBase = wafBuildDir = getWafBuildBase()
-    if isWindows:
+    if isWindows and not isMSYS2:
         wafBuildDir = posixjoin(wafBuildBase, 'release')
 
     build_options = list()
@@ -1639,13 +1646,14 @@ def cmd_build_py(options, args):
             wafBuildDir = posixjoin(wafBuildBase, 'debug')
     if isDarwin and options.mac_arch:
         build_options.append("--mac_arch=%s" % options.mac_arch)
-    if isWindows:
+    if isWindows and not isMSYS2:
         if PYTHON_ARCH == '64bit':
             build_options.append('--msvc_arch=x64')
         else:
             build_options.append('--msvc_arch=x86')
-    if not isWindows:
-        build_options.append('--wx_config=%s' % WX_CONFIG)
+    if not isWindows or isMSYS2:
+        # double-quote because WX_CONFIG may contain spaces on MSYS2
+        build_options.append('--wx_config="%s"' % WX_CONFIG)
     if options.verbose:
         build_options.append('--verbose')
     if options.jobs:

@@ -145,7 +145,7 @@ class Configuration(object):
 
         #---------------------------------------
         # MSW specific settings
-        if os.name == 'nt' and  self.COMPILER == 'msvc':
+        if os.name == 'nt' and self.COMPILER == 'msvc':
             # Set compile flags and such for MSVC.  These values are derived
             # from the wxWidgets makefiles for MSVC, other compilers settings
             # will probably vary...
@@ -237,6 +237,11 @@ class Configuration(object):
 
             self.CC = self.CXX = self.LDSHARED = None
 
+            # FIXME: verify if really needed
+            self.lflags = [_flag.replace("/mingw", "C:/msys64/mingw")
+                           for _flag in self.lflags]
+            self.cflags = [_flag.replace("/mingw", "C:/msys64/mingw")
+                           for _flag in self.cflags]
             # wxMac settings
             if sys.platform[:6] == "darwin":
                 self.WXPLAT = '__WXMAC__'
