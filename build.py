@@ -87,6 +87,8 @@ isMSYS2 = ((isWindows and "GCC" in sys.version)
            or (sysconfig.get_platform() == "mingw")
            or (sys.platform == "msys")
            or ("msys" in sysconfig.get_platform()))
+if isMSYS2:
+    isWindows = True
 
 baseName = version.PROJECT_NAME
 eggInfoName = baseName + '.egg-info'
