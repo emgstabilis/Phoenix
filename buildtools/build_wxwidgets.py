@@ -238,6 +238,7 @@ def main(wxDir, args):
         action = "store"
         if type(default) == bool:
             action = "store_true"
+            parser.add_option("--no-" + opt, action="store_false", dest=opt)
         parser.add_option("--" + opt, default=default, action=action, dest=opt,
                           help=option_dict[opt][1])
 
