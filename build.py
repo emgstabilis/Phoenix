@@ -1423,6 +1423,12 @@ def cmd_build_wx(options, args):
     if options.jobs:
         build_options.append('--jobs=%s' % options.jobs)
 
+    BUILD_DIR = getBuildDir(options)
+    if not os.path.exists(BUILD_DIR):
+        os.makedirs(BUILD_DIR)
+    DESTDIR = options.destdir
+    PREFIX = options.prefix
+
     if isWindows:
         # Windows-specific pre build stuff
         if not options.no_msedge:
@@ -1441,22 +1447,19 @@ def cmd_build_wx(options, args):
         if PY2:
             build_options.append('--no_dpi_aware')
 
+        if PREFIX:
+            build_options.append('--prefix=%s' % PREFIX)
     else:
         # Platform is something other than MSW
         if options.osx_carbon:
             options.osx_cocoa = False
 
-        BUILD_DIR = getBuildDir(options)
-        DESTDIR = options.destdir
-        PREFIX = options.prefix
         if options.mac_framework and isDarwin:
             # TODO:  Don't hard-code this path
             PREFIX = "/Library/Frameworks/wx.framework/Versions/%s" %  wxversion2
         if PREFIX:
             build_options.append('--prefix=%s' % PREFIX)
 
-        if not os.path.exists(BUILD_DIR):
-            os.makedirs(BUILD_DIR)
         if  isDarwin and options.mac_arch:
             build_options.append("--mac_universal_binary=%s" % options.mac_arch)
 
@@ -1491,10 +1494,10 @@ def cmd_build_wx(options, args):
             if options.gtk3:
                 build_options.append('--gtk3')
 
-        # Change to what will be the wxWidgets build folder
-        # (Note, this needs to be after any testing for file/path existence, etc.
-        # because they may be specified as relative paths.)
-        pwd = pushDir(BUILD_DIR)
+    # Change to what will be the wxWidgets build folder
+    # (Note, this needs to be after any testing for file/path existence, etc.
+    # because they may be specified as relative paths.)
+    pwd = pushDir(BUILD_DIR)
 
     if options.debug or (isWindows and options.both):
         build_options.append('--debug')
