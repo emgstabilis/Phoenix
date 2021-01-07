@@ -218,6 +218,7 @@ def configure(conf):
             if wxConfigDir.startswith("/"):
                 wxConfigDir = wxConfigDir[1:]
             wxConfigDir = os.path.join(os.path.dirname(sys.prefix), wxConfigDir)
+        print("wxConfigDir = ", wxConfigDir)
 
         # Configuration stuff for non-Windows ports using wx-config
         conf.env.CFLAGS_WX   = list()
@@ -396,10 +397,49 @@ def configure(conf):
             if conf.options.mac_arch:
                 conf.env.ARCH_WXPY = conf.options.mac_arch.split(',')
 
-    #import pprint
-    #pprint.pprint( [(k, conf.env[k]) for k in conf.env.keys()] )
+    print("\n")
+    print("-" * 72)
+    print("environment before replacing paths:")
+    import pprint
+    pprint.pprint( [(k, conf.env[k]) for k in conf.env.keys()] )
+
+    if isMSYS2:
+        translate_env_mingw_paths(conf)
+
+    print("\n")
+    print("-" * 72)
+    print("environment after replacing paths:")
+    import pprint
+    pprint.pprint( [(k, conf.env[k]) for k in conf.env.keys()] )
 
 
+def translate_env_mingw_paths(conf):
+    """Translates all paths in configuration's environment"""
+    for key, value in dict(conf.env).items():
+        if key_has_paths(key):
+            conf.env[key] = translate_mingw_paths(value)
+
+
+def key_has_paths(key):
+    """Returns True if a variable in conf.env has paths in it"""
+    return (key.startswith("INCLUDES")
+            or key.startswith("LIBPATH"))
+
+
+def translate_mingw_paths(paths):
+    """Returns a list of translated paths"""
+    if isinstance(paths, str):
+        return translate_mingw_path(paths)
+    else:
+        return [translate_mingw_path(path) for path in paths]
+
+
+def translate_mingw_path(path):
+    """Returns a translated path"""
+    if path.startswith("/mingw"):
+        return "C:/msys64/mingw" + path[6:]
+    else:
+        return path
 
 #
 # This is a copy of WAF's check_python_headers with some problematic stuff ripped out.
