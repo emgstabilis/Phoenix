@@ -1457,6 +1457,7 @@ def cmd_build_wx(options, args):
 
         if isMSYS2:
             build_options.append('--toolkit=autoconf')
+            build_options.append('--no-gtk3')
     else:
         # Platform is something other than MSW
         if options.osx_carbon:
