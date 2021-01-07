@@ -190,9 +190,9 @@ def main(wxDir, args):
         contribDir = os.path.join(wxRootDir, "contrib", "build")
 
     if sys.platform.startswith("win"):
-        toolkit = "msvc"
+        default_toolkit = "msvc"
     else:
-        toolkit = "autoconf"
+        default_toolkit = "autoconf"
 
     defJobs = str(numCPUs())
     defFwPrefix = '/Library/Frameworks'
@@ -207,6 +207,7 @@ def main(wxDir, args):
         "installdir"    : ("", "Directory where built wxWidgets will be installed"),
         "gtk2"          : (False, "On Linux build for gtk2 (default gtk3"),
         "gtk3"          : (True,  "On Linux build for gtk3"),
+        "toolkit"       : (default_toolkit, "Compiler toolkit (defaults to msvc on Windows, autoconf otherwise)"),
         "mac_distdir"   : (None, "If set on Mac, will create an installer package in the specified dir."),
         "mac_universal_binary"
                         : ("", "Comma separated list of architectures to include in the Mac universal binary"),
@@ -242,6 +243,7 @@ def main(wxDir, args):
 
     options, arguments = parser.parse_args(args=args)
 
+    toolkit = options.toolkit
     global verbose
     if options.verbose:
         verbose = True
