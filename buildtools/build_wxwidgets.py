@@ -305,6 +305,8 @@ def main(wxDir, args):
             wxpy_configure_opts.append("--host=x86_64-w64-mingw32")
             wxpy_configure_opts.append("--target=x86_64-w64-mingw32")
             wxpy_configure_opts.append("--build=x86_64-w64-mingw32")
+            wxpy_configure_opts.append("--disable-precomp-headers")
+            wxpy_configure_opts.append("--enable-permissive")
         # Set the minimum supported OSX version.
         # TODO: Add a CLI option to set this.
         if sys.platform.startswith("darwin"):
