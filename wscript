@@ -216,15 +216,8 @@ def configure(conf):
     else:
         # TODO: Double-check that this works when using an installed wxWidgets
         wxConfigDir = cfg.findWxConfigDir(conf.options.wx_config)
-        if isMSYS2:
-            # We have to translate the path because on MSYS2 python is
-            # a native program and can handle only native paths,
-            # whereas wx_config returns posix paths.
-            if wxConfigDir.startswith("/"):
-                wxConfigDir = wxConfigDir[1:]
-            wxConfigDir = os.path.join(os.path.dirname(sys.prefix), wxConfigDir)
         print("wxConfigDir = ", wxConfigDir)
-
+        
         # Configuration stuff for non-Windows ports using wx-config
         conf.env.CFLAGS_WX   = list()
         conf.env.CXXFLAGS_WX = list()
