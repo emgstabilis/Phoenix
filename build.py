@@ -1623,6 +1623,7 @@ def copyWxDlls(options):
 
 
 def cmd_build_py(options, args):
+    global PYTHON
     cmdTimer = CommandTimer('build_py')
     waf = getWafCmd()
     checkCompiler()
@@ -1695,6 +1696,7 @@ def cmd_build_py(options, args):
 
     # Run waf to perform the builds
     pwd = pushDir(phoenixDir())
+    PYTHON=sys.executable
     cmd = '"%s" %s %s configure build %s' % (PYTHON, waf, ' '.join(build_options), options.extra_waf)
 
     def _onWafError():
