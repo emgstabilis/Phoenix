@@ -30,10 +30,15 @@ isWindows = sys.platform.startswith('win')
 isDarwin = sys.platform == "darwin"
 # MSYS2: sys.platform is win32 but compiler is GCC instead of MSVC.
 # We identify use several ways in order to ensure that it is correctly
-# identified.  (Any of the 3 tests works on my system.)
+# identified.  (Any of the first 3 tests works on MINGW64 python, and
+# the next 2 on MSYS python.)
 isMSYS2 = ((isWindows and "GCC" in sys.version)
            or ("mingw" in sys.prefix)
-           or (sysconfig.get_platform() == "mingw"))
+           or (sysconfig.get_platform() == "mingw")
+           or (sys.platform == "msys")
+           or ("msys" in sysconfig.get_platform()))
+if isMSYS2:
+    isWindows = True
 
 top = '.'
 out = 'build/waf'
