@@ -301,6 +301,10 @@ def main(wxDir, args):
         else:
             wxpy_configure_opts.append("--with-sdl")
 
+        if "msys" in sys.platform:
+            wxpy_configure_opts.append("--host=x86_64-w64-mingw32")
+            wxpy_configure_opts.append("--target=x86_64-w64-mingw32")
+            wxpy_configure_opts.append("--build=x86_64-w64-mingw32")
         # Set the minimum supported OSX version.
         # TODO: Add a CLI option to set this.
         if sys.platform.startswith("darwin"):
